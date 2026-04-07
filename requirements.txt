@@ -1,0 +1,5 @@
+# Requirements for house-price-predictor
+requests==2.31.0
+pandas==2.0.3
+sqlite3  # Note: sqlite3 is built-in with Python 3.6+
+# Add other dependencies as needed
