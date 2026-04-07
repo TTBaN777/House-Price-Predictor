@@ -21,8 +21,8 @@ house-price-predictor/
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/house-price-predictor.git
-   cd house-price-predictor
+   git clone https://github.com/TTBaN777/House-Price-Predictor.git
+   cd House-Price-Predictor
    ```
 
 2. Install dependencies:
