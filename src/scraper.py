@@ -2,7 +2,7 @@ import requests
 
 class HouseScraper:
     def __init__(self):
-        # 使用 Session 會自動幫我們處理 Cookie
+        # Session 處理 Cookie
         self.session = requests.Session()
         self.city_index = {
             "宜蘭縣": 1, "基隆市": 2, "台北市": 3, "新北市": 4, 
@@ -13,16 +13,18 @@ class HouseScraper:
             "金門縣": 24
         }
         self.headers = {
+            # 假裝自己是 Chrome 避免被反爬蟲
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Referer": "https://www.great-home.com.tw/RentHouse/Main.aspx",
             "X-Requested-With": "XMLHttpRequest"
         }
-        # 關鍵：先去首頁打個招呼，拿到 Cookie
+        # 去首頁拿 Cookie ，網站 API 需要 Cookie 才會回資料
         try:
             self.session.get("https://www.great-home.com.tw/RentHouse/Main.aspx", headers=self.headers, timeout=10)
         except:
             pass
-
+    
+    # 處理空字串、None 或其他奇怪的格式
     def _safe_int(self, value, default=0):
         try:
             if value is None or str(value).strip() == "": return default
@@ -30,7 +32,6 @@ class HouseScraper:
         except: return default
 
     def _safe_float(self, value, default=0.0):
-        """安全轉換浮點數，處理空字串或異常"""
         try:
             if value is None or str(value).strip() == "":
                 return default
@@ -42,11 +43,10 @@ class HouseScraper:
         try:
             api_url = "https://www.great-home.com.tw/ajax/dataService.aspx?job=search&path=rent"
             
-            # 取得該縣市的索引，如果找不到就預設為 3 (台北市)
+            # 取得該縣市的 index ，預設為 3 (台北市)
             idx = self.city_index.get(city_name, 3)
             
-            # 動態生成 q 密碼：1^1^{索引}^^^P_^^^^^^^^^^^0^^0^1^{頁碼}^0
-            # 注意：新北市你抓到的是 P，其他是 P_，我們統一用 P_ 試試，通常通用
+            # 這是 API 的 搜尋條件編碼
             q_value = f"1^1^{idx}^^^P_^^^^^^^^^^^0^^0^1^{page}^0"
             
             payload = {
@@ -57,21 +57,20 @@ class HouseScraper:
             headers = self.headers.copy()
             headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
 
-            # 增加 timeout 到 20 秒並執行請求
+            # timeout 20 秒並執行請求
             response = self.session.post(api_url, headers=headers, data=payload, timeout=20)
 
-            # 修正：處理可能的控制字元問題
             try:
                 # strict=False 可以處理 JSON 內容中的換行符或特殊字元
                 import json
                 result_json = json.loads(response.text, strict=False)
             except Exception as je:
-                print(f"⚠️ 第 {page} 頁 JSON 解析異常，嘗試自動修復...")
+                print(f"第 {page} 頁 JSON 解析異常，嘗試自動修復...")
                 return []
 
             data_list = result_json.get("data", [])
             if data_list:
-                print(f"🚀 第 {page} 頁成功！第一筆：{data_list[0].get('n')} ({data_list[0].get('x')})")
+                print(f"第 {page} 頁成功！第一筆：{data_list[0].get('n')} ({data_list[0].get('x')})")
             
             houses = []
             for item in data_list:
@@ -84,7 +83,7 @@ class HouseScraper:
                     "id": item.get("s", ""),
                     "title": item.get("n", "無標題"),
                     # 使用 _safe_float 處理價格、坪數與屋齡
-                    "price": self._safe_float(item.get("np", 0)) * 100, 
+                    "price": self._safe_float(item.get("np", 0)) * 10000, 
                     "size": self._safe_float(item.get("a", 0)),
                     "rooms": self._safe_int(processed_p[0]),
                     "halls": self._safe_int(processed_p[1]),

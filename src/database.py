@@ -55,7 +55,7 @@ class Database:
             ]
             cursor.executemany(sql, data_tuples)
             conn.commit()
-            print(f"💾 資料庫更新完成，本次新增/更新筆數: {cursor.rowcount}")
+            print(f"本次新增/更新筆數: {cursor.rowcount}")
     
     def export_to_csv(self, file_path="data/house_rent_export.csv"):
         """將資料庫內容匯出為 CSV 檔，解決 Excel 中文亂碼問題"""
@@ -69,6 +69,6 @@ class Database:
                 
                 #匯出 CSV，使用 utf-8-sig 編碼（Excel 專用防亂碼）
                 df.to_csv(file_path, index=False, encoding='utf-8-sig')
-                print(f"📊 CSV 匯出成功！路徑: {file_path}")
+                print(f"CSV 匯出成功！路徑: {file_path}")
         except Exception as e:
-            print(f"❌ 匯出 CSV 失敗: {e}")
+            print(f"匯出 CSV 失敗: {e}")
