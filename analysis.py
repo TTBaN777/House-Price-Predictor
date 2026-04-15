@@ -1,7 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
 
 # 資料清洗與特徵強化
 df = pd.read_csv("data/台北市_rent_export.csv")

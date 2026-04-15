@@ -4,6 +4,10 @@ import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
 # 1. 初始化 API
 app = FastAPI(title="台北市租屋行情預測系統")
 
@@ -19,6 +23,16 @@ class HouseInput(BaseModel):
     halls: int     # 廳
     bath: int      # 衛
     age: float     # 屋齡
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    return FileResponse(os.path.join("static", "favicon.ico")) # 或是回傳一個空的 Response
+
+@app.get("/")
+def index():
+    return FileResponse(os.path.join("static", "index.html"))
 
 # 4. 預測端點
 @app.post("/predict")
@@ -57,6 +71,6 @@ def predict_rent(data: HouseInput):
         "message": "預測結果僅供參考！"
     }
 
-@app.get("/")
-def read_root():
-    return {"message": "房屋預測 API 已啟動，請前往 /docs 進行測試"}
+@app.get("/health")
+def health_check():
+    return {"status": "online", "model_version": "v2.0_xgboost"}
